@@ -23,6 +23,9 @@ func BuildManifest(req types.ShareRequest) (types.RemoteManifest, string, error)
 	}
 	manifest := types.RemoteManifest{Schema: 1, App: constants.AppName, Version: constants.AppVersion}
 	if req.ShareConfig {
+		if len(req.ConfigRootKeys) == 0 && len(req.ConfigTables) == 0 {
+			return manifest, base, errors.New("config.toml was selected but no root key-values or tables were selected")
+		}
 		entry, err := fileResource(base, "config.toml", false)
 		if err != nil {
 			return manifest, base, err

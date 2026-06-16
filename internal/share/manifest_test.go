@@ -26,7 +26,7 @@ func TestBuildManifest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	manifest, _, err := BuildManifest(types.ShareRequest{CodexDir: dir, ShareConfig: true, ShareSkills: true, Skills: []string{"translation"}})
+	manifest, _, err := BuildManifest(types.ShareRequest{CodexDir: dir, ShareConfig: true, ShareSkills: true, ConfigRootKeys: []string{"model"}, Skills: []string{"translation"}})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -57,7 +57,7 @@ func MergeConfigSections(sourcePath, targetPath string, rootKeys, tables []strin
 		return err
 	}
 	if len(rootKeys) == 0 && len(tables) == 0 {
-		return os.WriteFile(targetPath, source, 0o600)
+		return nil
 	}
 	target, err := os.ReadFile(targetPath)
 	if os.IsNotExist(err) {

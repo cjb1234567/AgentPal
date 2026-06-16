@@ -52,3 +52,52 @@ func TestMergeConfigSections(t *testing.T) {
 		t.Fatalf("merged config retained replaced or unselected values:\n%s", merged)
 	}
 }
+
+func TestMergeConfigSectionsWithNoSelectionsPreservesTarget(t *testing.T) {
+	dir := t.TempDir()
+	source := filepath.Join(dir, "source.toml")
+	target := filepath.Join(dir, "target.toml")
+	original := "model = \"local\"\n\n[projects.\"/local/project\"]\nhistory = \"keep\"\n"
+	if err := os.WriteFile(source, []byte("model = \"remote\"\n\n[projects.\"/remote/project\"]\nhistory = \"remote\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(target, []byte(original), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := MergeConfigSections(source, target, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	merged, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(merged) != original {
+		t.Fatalf("target changed with no selections:\n%s", merged)
+	}
+}
+
+func TestMergeConfigSectionsPreservesUnselectedProjects(t *testing.T) {
+	dir := t.TempDir()
+	source := filepath.Join(dir, "source.toml")
+	target := filepath.Join(dir, "target.toml")
+	if err := os.WriteFile(source, []byte("model = \"remote\"\n\n[projects.\"/remote/project\"]\nhistory = \"remote\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(target, []byte("model = \"local\"\n\n[projects.\"/local/project\"]\nhistory = \"keep\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := MergeConfigSections(source, target, []string{"model"}, nil); err != nil {
+		t.Fatal(err)
+	}
+	mergedBytes, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	merged := string(mergedBytes)
+	if !strings.Contains(merged, "model = \"remote\"") || !strings.Contains(merged, "[projects.\"/local/project\"]") || !strings.Contains(merged, "history = \"keep\"") {
+		t.Fatalf("expected root update and local projects preserved:\n%s", merged)
+	}
+	if strings.Contains(merged, "/remote/project") {
+		t.Fatalf("unselected remote projects table was merged:\n%s", merged)
+	}
+}

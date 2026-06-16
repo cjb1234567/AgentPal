@@ -68,6 +68,9 @@ func selectedItems(req types.SyncRequest, manifest types.RemoteManifest) ([]stri
 		if !manifest.Shared.Config.Enabled {
 			return nil, errors.New("remote manifest does not include config.toml")
 		}
+		if len(req.ConfigRootKeys) == 0 && len(req.ConfigTables) == 0 {
+			return nil, errors.New("config.toml was selected but no root key-values or tables were selected")
+		}
 		items = append(items, "config.toml")
 	}
 	if req.SyncAuth {
@@ -89,7 +92,7 @@ func selectedItems(req types.SyncRequest, manifest types.RemoteManifest) ([]stri
 }
 
 func withDefaultSelections(req types.SyncRequest, manifest types.RemoteManifest) types.SyncRequest {
-	if req.SyncConfig && len(req.ConfigRootKeys) == 0 && len(req.ConfigTables) == 0 {
+	if req.SyncConfig && req.ConfigRootKeys == nil && req.ConfigTables == nil {
 		req.ConfigRootKeys = manifest.Shared.Config.RootKeys
 		req.ConfigTables = manifest.Shared.Config.Tables
 	}
